@@ -1,84 +1,94 @@
-function Rocket (l,dna,totalRockets){
- this.genecounter = 0;
- this.hitObsTacle =false;
- this.hitTarget= false;
- this.fitness;
- this.acceleration = createVector(0,0);
- this.velocity = createVector(0, 0);
- this.position = l.get();
- this.r =4;
- this.dna = dna;
- this.finishTime = 0;
- this.recordDist = 10000;
-
-}
-
-Rocket.prototype.fitness= function () {
- if(this.recordDist <1 ) this.recordDist = 1;   
-    this.fitness = (1/this.finishTime *this.recordDist);
-    this.fitness = pow(this.fitness,4);
-
-    if(this.hitObsTacle) this.fitness *= 0.1;         //decrease health marginally if an obstacle is hit
-    if(this.hitTarget) this.fitness*=2;               //increse fitness if target is achieved
-} 
-
-Rocket.prototype.run = function(ob){
-    if(!this.hitObsTacle && !this.hitTarget)
-    {
-        this.applyForce(dna.genes[this.genecounter])  //genes is it self a vector
-        genecounter = (genecounter + 1)% dna.genes.length
-        update();
-        //if obstacle 'is hit create new obstacle
-        Obstacles(os);
+function Rocket(dna) {
+    // Physics of rocket at current instance
+    this.pos = createVector(width / 2, height);
+    this.vel = createVector();
+    this.acc = createVector();
+    // Checkes rocket has reached target
+    this.completed = false;
+    // Checks if rocket had crashed
+    this.crashed = false;
+    // Gives a rocket dna
+    if (dna) {
+      this.dna = dna;
+    } else {
+      this.dna = new DNA();
     }
-    if(!hitObsTacle)
-    display();
-}
+    this.fitness = 0;
+  
+    // Object can recieve force and add to acceleration
+    this.applyForce = function(force) {
+      this.acc.add(force);
+    }
+    // Calulates fitness of rocket
+    this.calcFitness = function() {
+      // Takes distance to target
+      var d = dist(this.pos.x, this.pos.y, target.x, target.y);
+  
+      // Maps range of fitness
+      this.fitness = map(d, 0, width, width, 0);
+      // If rocket gets to target increase fitness of rocket
+      if (this.completed) {
+        this.fitness *= 10;
+      }
+      // If rocket does not get to target decrease fitness
+      if (this.crashed) {
+        this.fitness /= 10;
+      }
+  
+    }
+    // Updates state of rocket
+    this.update = function() {
+      // Checks distance from rocket to target
+      var d = dist(this.pos.x, this.pos.y, target.x, target.y);
+      // If distance less than 10 pixels, then it has reached target
+      if (d < 10) {
+        this.completed = true;
+        this.pos = target.copy();
+      }
+      // Rocket hit the barrier
+      if (this.pos.x > rx && this.pos.x < rx + rw && this.pos.y > ry && this.pos.y < ry + rh) {
+        this.crashed = true;
+      }
 
-Rocket.prototype.applyForce = function(f)
-{
-    this.acceleration.add(f);  //add new vector to accerlation
-}
-
-Rocket.prototype.update =  function () {
-
-    this.velocity.add(this.acceleration);
-    this.position.add(velocity);
-    this.acceleration.mult(0);
-
-}
-Rocket.prototype.display = function () {
-    //var theta = this.velocity.heading2D() + PI/2;
-    fill(200,200);
-    stroke(0);
-    strokeWeight(1);
-    pushMatrix();
-  //  translate(this.position.x, this.position.y);
-    rotate(theta);
-
-    rectMode(CENTER);
-    fill(0);
-    rect(-r/2,r*2,r/2,r);
-    rect(r/2,r*2,r/2,r);
-    
-    fill(175);
-    beginShape(TRIANGLES);
-    vertex(0, -r*2);
-    vertex(-r, r*2);
-    vertex(r, r*2);
-    endShape();
-
-    popMatrix();
-
-}
-
-Rocket.prototype.getFitness = function(){
-    return this.fitness;
-}
-Rocket.prototype.getDNA = function(){
-    return this.dna;
-}
-Rocket.prototype.stopped = function ()
-{
-    return hitObsTacle;
-}
+      if (this.pos.x > rx-600 && this.pos.x < rx-600 + rw && this.pos.y > ry-300 && this.pos.y < ry-300 + rh) {
+        this.crashed = true;
+      }
+      
+      // Rocket has hit left or right of window
+      if (this.pos.x > width || this.pos.x < 0) {
+        this.crashed = true;
+      }
+      // Rocket has hit top or bottom of window
+      if (this.pos.y > height || this.pos.y < 0) {
+        this.crashed = true;
+      }
+  
+      //applies the random vectors defined in dna to consecutive frames of rocket
+      this.applyForce(this.dna.genes[count]);
+      // if rocket has not got to goal and not crashed then update physics engine
+      if (!this.completed && !this.crashed) {
+        this.vel.add(this.acc);
+        this.pos.add(this.vel);
+        this.acc.mult(0);
+        this.vel.limit(4);
+      }
+    }
+    // displays rocket to window
+    this.show = function() {
+      // push and pop allow's rotating and translation not to affect other objects
+      push();
+      //color customization of rockets
+      noStroke();
+      fill(255, 150);
+      //translate to the postion of rocket
+      translate(this.pos.x, this.pos.y);
+      //rotatates to the angle the rocket is pointing
+      rotate(this.vel.heading());
+      //creates a rectangle shape for rocket
+      rectMode(CENTER);
+      rect(0, 0, 25, 5);
+      pop();
+    }
+  
+  }
+  

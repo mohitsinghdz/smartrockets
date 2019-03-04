@@ -10,10 +10,12 @@ Obstacle.prototype.display= function () {
     fill(175);
     strokeWeight(2);
     rectMode(CORNER);
-    rect(position.x,position.y,w,h);
+    rect(this.position.x,this.position.y,this.w,this.h);
 }
 
 Obstacle.prototype.contains = function (spot){
+  var w= this.w;
+  var h = this.h;
     if (spot.x > position.x && spot.x < position.x + w && spot.y > position.y && spot.y < position.y + h) {
         return true;
       } else {

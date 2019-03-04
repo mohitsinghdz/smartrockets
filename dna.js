@@ -1,53 +1,48 @@
 
-function dna (newgenes)
-{
-    this.genes = [];
-    this.maxforce = 0.1; // let  oit be class variable
-
-if(newgenes)
-{
-    this.genes = newgenes;
-}
-else
-{
-    for(var i =0;i<lifetime;i++)
-    {
-        var angle = random(TWO_PI);
-        this.genes[i] = createVector(cos(angle), sin(angle));
-        this.genes[i].mult(random(0,this.maxforce))
+function DNA(genes) {
+    // Recieves genes and create a dna object
+    if (genes) {
+      this.genes = genes;
     }
-   this.genes[0].normalize();
- }
-    console.log(this.genes);
+    // If no genes just create random dna
+    else {
+      this.genes = [];
+      for (var i = 0; i < lifespan; i++) {
+        // Gives random vectors
+        this.genes[i] = p5.Vector.random2D();
+        // Sets maximum force of vector to be applied to a rocket
+        this.genes[i].setMag(maxforce);
+      }
+    }
+    // Performs a crossover with another member of the species
+    this.crossover = function(partner) {
+      var newgenes = [];
+      // Picks random midpoint
+      var mid = floor(random(this.genes.length));
+      for (var i = 0; i < this.genes.length; i++) {
+        // If i is greater than mid the new gene should come from this partner
+        if (i > mid) {
+          newgenes[i] = this.genes[i];
+        }
+        // If i < mid new gene should come from other partners gene's
+        else {
+          newgenes[i] = partner.genes[i];
+        }
+      }
+      // Gives DNA object an array
+      return new DNA(newgenes);
+    }
   
-}
-dna.prototype.getPhrase = function (){
-    //return this.genes;
-    return this.genes.join('');
-}
-
-dna.prototype.crossover = function (partner) {
-    var child= [];
-    var crossover = random(this.genes.length)
-    for(i=0;i<this.genes.length;i++)
-    {
-        if(i > crossover) child[i] = this.genes[i];
-        else child[i]= partner.genes[i]
+    // Adds random mutation to the genes to add variance.
+    this.mutation = function() {
+      for (var i = 0; i < this.genes.length; i++) {
+        // if random number less than 0.01, new gene is then random vector
+        if (random(1) < 0.01) {
+          this.genes[i] = p5.Vector.random2D();
+          this.genes[i].setMag(maxforce);
+        }
+      }
     }
-    var newdna = new dna(child);    //technically passing on parent;s  genes  //#endregion
-
-return newdna;
-}
-
-dna.prototype.mutate= function (m) {
- for(i=0;i<this.genes.length; i++)
- {
-     if(random(1)< m)
-     {
-        var angle = random(TWO_PI);
-        genes[i] = createVector(cos(angle), sin(angle));
-        genes[i].mult(random(0,maxforce));
-        if(i==0) genes[i].normalize();
-     }
- }   
-}
+  
+  }
+  

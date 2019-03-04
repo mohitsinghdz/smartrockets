@@ -1,87 +1,68 @@
-function Population (m,num){
- this.mutationRate = m;
- this.matingPool;
- this.generations = 0;
- this.population;
- for(var i =0;i<num.length;i++)
- {
-    position = createVector((width/2),height+20);
-    population[i] =  new Rocket(position, new dna(),population.length);
- }
-}
-
-Population.prototype.live = function(os){
-    for(i=0;i<this.population.length;i++)
-    {
-        population[i].checkTarget();
-        population[i].run(os);
-    }
-}
-
-Population.prototype.targetReached= function(){
-    for(i=0;i<this.population.length; i++){
-        if(population[i].hitTarget) return true;
+function Population() {
+    // Array of rockets
+    this.rockets = [];
+    // Amount of rockets
+    this.popsize = 1000;
+    // Amount parent rocket partners
+    this.matingpool = [];
   
+    // Associates a rocket to an array index
+    for (var i = 0; i < this.popsize; i++) {
+      this.rockets[i] = new Rocket();
     }
-
-    return false;
-}
-
-Population.prototype.fitness = function (){
-    for (i=0;i<population.length;i++){
-        population[i].fitness();
-    }
-}
-
-Population.prototype.selection = function () {
-
-    matingPool.clear();
-    var maxFitness = getMaxFitness();
-    for(i=0;i<population.length;i++){
-        var fitnessNormal = map(population[i].getFitness(),0,maxFitness,0,1);
-
-        var n = fitnessNormal*100;
-        for(var j=0;j<n;j++){
-            matingPool.add(population[i]);
+  
+    this.evaluate = function() {
+  
+      var maxfit = 0;
+      // Iterate through all rockets and calcultes their fitness
+      for (var i = 0; i < this.popsize; i++) {
+        // Calculates fitness
+        this.rockets[i].calcFitness();
+        // If current fitness is greater than max, then make max equal to current
+        if (this.rockets[i].fitness > maxfit) {
+          maxfit = this.rockets[i].fitness;
         }
-    }
-
-}
-
-Population.prototype.reproduction = function() {
-
-    for(i=0;i<population.length;i++){
-        var a = random(matingPool.size());
-        var b = random(matingPool.size());
-        var parent_A = matingPool.get(a);
-        var parent_B = matingPool.get(b);
-        var genes_a = parent_A.getDNA();
-        var genes_b = parent_B.getDNA();
-
-        var child = genes_a.crossover(genes_b);
-
-        child.mutate(mutationRate);
-        var  position = createVector(width/2, height+20);
-        population[i] = new Rocket(position,child,population.length); 
-        
-    }
-
-    generations++;
-} 
-
-Population.prototype.getGenerations = function(){
-    return generations;
-}
-
-Population.prototype.getMaxFitness = function () {
-
-        var record = 0;
-        for(var i=0;i<popualation.length;i++){
-            if(popualation[i].getFitness() > record)
-            {
-                record = population[i].getFitness();
-            }
+      }
+      // Normalises fitnesses
+      for (var i = 0; i < this.popsize; i++) {
+        this.rockets[i].fitness /= maxfit;
+      }
+  
+      this.matingpool = [];
+      // Take rockets fitness make in to scale of 1 to 100
+      // A rocket with high fitness will highly likely will be in the mating pool
+      for (var i = 0; i < this.popsize; i++) {
+        var n = this.rockets[i].fitness * 100;
+        for (var j = 0; j < n; j++) {
+          this.matingpool.push(this.rockets[i]);
         }
-
-        return record;
-}
+      }
+    }
+    // Selects appropriate genes for child
+    this.selection = function() {
+      var newRockets = [];
+      for (var i = 0; i < this.rockets.length; i++) {
+        // Picks random dna
+        var parentA = random(this.matingpool).dna;
+        var parentB = random(this.matingpool).dna;
+        // Creates child by using crossover function
+        var child = parentA.crossover(parentB);
+        child.mutation();
+        // Creates new rocket with child dna
+        newRockets[i] = new Rocket(child);
+      }
+      // This instance of rockets are the new rockets
+      this.rockets = newRockets;
+      generation++;
+    }
+  
+    // Calls for update and show functions
+    this.run = function() {
+      for (var i = 0; i < this.popsize; i++) {
+        this.rockets[i].update();
+        // Displays rockets to screen
+        this.rockets[i].show();
+      }
+    }
+  }
+  
